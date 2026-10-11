@@ -1,0 +1,57 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:HackRfIqDataTest.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="HackRfIqDataTest.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="HackRfIqDataTest">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="10"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="15"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="10"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="10"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+        
+            <StackPanel Grid.Column="0" Grid.Row="1" Orientation="Horizontal" Margin="15,30,0,0">
+                <TextBlock Text="Start Frequency MHz" Margin="0,0,25,0"  VerticalAlignment="Center"/>
+                <TextBox Text="{Binding StartFrequency}" Width="150"/>
+            </StackPanel>
+        
+            <StackPanel Grid.Column="0" Grid.Row="3" Orientation="Horizontal" Margin="15,0,0,0">
+                <TextBlock Text="End Frequency MHz" Margin="0,0,31,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding EndFrequency}" Width="150"/>
+            </StackPanel>
+        
+            <Button Grid.Column="0" Grid.Row="5" Height="35" Content="capture data" VerticalContentAlignment="Center" 
+                    Margin="15,0,0,0" Command="{Binding CaptureData}"/>
+        </Grid>
+        
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="10"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="10"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            
+            <Button Grid.Row="1" Content="Clear" HorizontalAlignment="Right" 
+                    Command="{Binding ClearLog}" Margin="0,0,35,0"/>
+            
+            <ListBox Grid.Row="3" ItemsSource="{Binding Log}" Margin="0,0,10,0"/>
+        </Grid>
+    </Grid>
+</Window>
