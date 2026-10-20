@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -15,8 +14,6 @@ namespace HackRfIqDataTest.ViewModels;
 
 public sealed class MainViewModel : INotifyPropertyChanged
 {
-    private const string TimeFormat = "yyyy-MM-dd HH:mm:ss";
-
     private readonly ISoftwareDefineRadio _radio;
     private readonly string _recordingsDirectory;
     private readonly AsyncRelayCommand _captureData;
@@ -32,13 +29,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public double EndFrequency { get; set => _ = this.SetField(ref field, value); } = 102;
 
     public double CaptureDurationMs { get; set => _ = this.SetField(ref field, value); } = 100;
-
-    /// <summary>Local time; leave blank to start immediately.</summary>
-    public string RecordingStartTime { get; set => _ = this.SetField(ref field, value); } = "";
-
-    /// <summary>Local time.</summary>
-    public string RecordingStopTime { get; set => _ = this.SetField(ref field, value); } =
-        DateTime.Now.AddMinutes(1).ToString(TimeFormat, CultureInfo.CurrentCulture);
 
     public string RecordingStatus { get; private set => _ = this.SetField(ref field, value); } = "Not recording";
 
@@ -134,37 +124,28 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private async Task OnStartRecordingRequested()
     {
-        if (!TryParseLocalTime(this.RecordingStartTime, DateTime.Now, out var startLocal) ||
-            !TryParseLocalTime(this.RecordingStopTime, null, out var stopLocal))
-        {
-            this.UserLog.Log.Add($"Recording times must look like {DateTime.Now.ToString(TimeFormat, CultureInfo.CurrentCulture)}");
-            return;
-        }
-
         using var cancellation = this._recordingCancellation = new CancellationTokenSource();
         this.NotifyCommandsChanged();
         try
         {
             this.TuneRadio();
-            this.RecordingStatus = startLocal > DateTime.Now ? $"Waiting to start at {startLocal.ToString(TimeFormat, CultureInfo.CurrentCulture)}" : "Starting...";
-            this.UserLog.Log.Add(
-                $"Recording {this.StartFrequency} - {this.EndFrequency} MHz from " +
-                $"{startLocal.ToString(TimeFormat, CultureInfo.CurrentCulture)} to {stopLocal.ToString(TimeFormat, CultureInfo.CurrentCulture)}");
+            this.RecordingStatus = "Starting...";
+            this.UserLog.Log.Add($"Recording {this.StartFrequency} - {this.EndFrequency} MHz...");
 
             var progress = new Progress<RecordingProgress>(p => this.RecordingStatus =
                 $"Recording: {p.Elapsed:hh\\:mm\\:ss}, {p.BytesWritten / 1e6:F1} MB written, {p.DroppedSamples:N0} samples dropped");
-            var result = await Recorder.RecordAsync(
-                this._radio, this._recordingsDirectory, startLocal.ToUniversalTime(), stopLocal.ToUniversalTime(), progress, cancellation.Token);
+            var result = await Recorder.RecordAsync(this._radio, this._recordingsDirectory, progress, cancellation.Token);
 
             this.RecordingStatus = "Not recording";
             this.UserLog.Log.Add(
                 $"Recorded {result.SamplesWritten:N0} samples ({result.SamplesWritten * 2 / 1e6:F1} MB) to {result.MetaPath}" +
-                (result.GapCount > 0 ? $"; {result.DroppedSamples:N0} samples dropped in {result.GapCount} gap(s)" : ""));
+                (result.GapCount > 0 ? $"; {result.DroppedSamples:N0} samples dropped in {result.GapCount} gap(s)" : "") +
+                (result.StoppedForLowDiskSpace ? "; stopped because the disk is nearly full" : ""));
         }
         catch (OperationCanceledException)
         {
             this.RecordingStatus = "Not recording";
-            this.UserLog.Log.Add("Recording cancelled before it started");
+            this.UserLog.Log.Add("Recording stopped before the HackRF started streaming");
         }
         catch (Exception ex)
         {
@@ -197,17 +178,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         this._saveCapture.NotifyCanExecuteChanged();
         this._startRecording.NotifyCanExecuteChanged();
         this._stopRecording.NotifyCanExecuteChanged();
-    }
-
-    private static bool TryParseLocalTime(string text, DateTime? whenBlank, out DateTime time)
-    {
-        if (string.IsNullOrWhiteSpace(text) && whenBlank is { } blank)
-        {
-            time = blank;
-            return true;
-        }
-
-        return DateTime.TryParse(text, CultureInfo.CurrentCulture, DateTimeStyles.AssumeLocal, out time);
     }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)

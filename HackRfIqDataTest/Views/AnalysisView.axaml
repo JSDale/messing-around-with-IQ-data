@@ -85,8 +85,16 @@
                 <TextBlock Grid.Row="2" Text="{Binding EndTimeLabel}" HorizontalAlignment="Right"/>
             </Grid>
 
-            <Border Grid.Row="2" Grid.Column="2" Background="Black">
-                <Image Source="{Binding WaterfallImage}" Stretch="Fill"/>
+            <Border Grid.Row="2" Grid.Column="2" Background="Black" Cursor="Cross"
+                    PointerMoved="OnWaterfallPointerMoved" PointerExited="OnWaterfallPointerExited">
+                <Panel>
+                    <Image Source="{Binding WaterfallImage}" Stretch="Fill"/>
+                    <Canvas IsHitTestVisible="False">
+                        <Border x:Name="Readout" IsVisible="False" Background="#D0202020" CornerRadius="3" Padding="6,3">
+                            <TextBlock x:Name="ReadoutText" Foreground="White" FontSize="12"/>
+                        </Border>
+                    </Canvas>
+                </Panel>
             </Border>
 
             <Grid Grid.Row="3" Grid.Column="2">

@@ -16,7 +16,7 @@
         <TabItem Header="Capture">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="500"/>
+                    <RowDefinition Height="420"/>
                     <RowDefinition Height="10"/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
@@ -59,16 +59,6 @@
                     </StackPanel>
 
                     <TextBlock Text="Continuous recording" FontWeight="SemiBold" Margin="0,10,0,0"/>
-
-                    <StackPanel Classes="field" Orientation="Horizontal">
-                        <TextBlock Text="Start (blank = now)"/>
-                        <TextBox Text="{Binding RecordingStartTime}" Width="180" Watermark="yyyy-MM-dd HH:mm:ss"/>
-                    </StackPanel>
-
-                    <StackPanel Classes="field" Orientation="Horizontal">
-                        <TextBlock Text="Stop"/>
-                        <TextBox Text="{Binding RecordingStopTime}" Width="180" Watermark="yyyy-MM-dd HH:mm:ss"/>
-                    </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Button Height="35" Content="start recording" VerticalContentAlignment="Center" 

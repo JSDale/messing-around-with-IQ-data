@@ -10,50 +10,36 @@ namespace HackRfIqDataTest.Storage;
 
 public sealed record RecordingProgress(TimeSpan Elapsed, long BytesWritten, long DroppedSamples);
 
-public sealed record RecordingResult(string MetaPath, long SamplesWritten, long DroppedSamples, int GapCount);
+public sealed record RecordingResult(string MetaPath, long SamplesWritten, long DroppedSamples, int GapCount, bool StoppedForLowDiskSpace);
 
 /// <summary>
-/// Streams from the radio straight into a SigMF recording between a start and stop time.
+/// Streams from the radio straight into a SigMF recording until cancelled.
 /// </summary>
 public static class Recorder
 {
+    private const long MinFreeBytes = 1_000_000_000;
     private static readonly TimeSpan NoDataTimeout = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan ProgressInterval = TimeSpan.FromMilliseconds(500);
 
     /// <summary>
-    /// Waits until <paramref name="startAtUtc"/>, then records until <paramref name="stopAtUtc"/>. Cancelling before
-    /// the start time abandons the recording; cancelling after it stops early and keeps what was recorded.
+    /// Records until <paramref name="cancellationToken"/> is cancelled, keeping everything recorded up to that point.
+    /// Also stops by itself if the disk gets close to full.
     /// </summary>
     public static async Task<RecordingResult> RecordAsync(
-        ISoftwareDefineRadio radio,
-        string directory,
-        DateTime startAtUtc,
-        DateTime stopAtUtc,
-        IProgress<RecordingProgress>? progress,
-        CancellationToken cancellationToken)
+        ISoftwareDefineRadio radio, string directory, IProgress<RecordingProgress>? progress, CancellationToken cancellationToken)
     {
-        if (stopAtUtc <= startAtUtc || stopAtUtc <= DateTime.UtcNow)
-        {
-            throw new ArgumentException("Stop time must be after the start time and in the future.");
-        }
-
-        var wait = startAtUtc - DateTime.UtcNow;
-        if (wait > TimeSpan.Zero)
-        {
-            await Task.Delay(wait, cancellationToken);
-        }
+        Directory.CreateDirectory(directory);
+        var drive = FindDrive(directory);
+        ThrowIfLowDiskSpace(drive);
 
         await using var stream = await radio.StartStreaming(cancellationToken);
-        EnsureFreeSpace(directory, (long)(stream.Tuning.SampleRateHz * 2 * (stopAtUtc - DateTime.UtcNow).TotalSeconds));
         await using var writer = SigMfWriter.Create(directory, stream.Tuning, stream.StartedAtUtc);
 
-        using var stop = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        stop.CancelAfter(TimeSpan.FromTicks(Math.Max((stopAtUtc - DateTime.UtcNow).Ticks, 0)));
-
+        var stoppedForLowDiskSpace = false;
         var sinceProgress = Stopwatch.StartNew();
-        while (true)
+        while (!stoppedForLowDiskSpace)
         {
-            using var noData = CancellationTokenSource.CreateLinkedTokenSource(stop.Token);
+            using var noData = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             noData.CancelAfter(NoDataTimeout);
 
             IqBlock block;
@@ -61,13 +47,13 @@ public static class Recorder
             {
                 block = await stream.Blocks.ReadAsync(noData.Token);
             }
-            catch (OperationCanceledException) when (!stop.IsCancellationRequested)
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
                 throw new TimeoutException($"The HackRF sent no data for {NoDataTimeout.TotalSeconds:F0} s. The recording so far has been kept.");
             }
             catch (Exception ex) when (ex is OperationCanceledException or ChannelClosedException)
             {
-                // Reached the stop time, or stopped early.
+                // Stopped by the user.
                 break;
             }
 
@@ -79,25 +65,27 @@ public static class Recorder
             if (sinceProgress.Elapsed >= ProgressInterval)
             {
                 progress?.Report(new RecordingProgress(DateTime.UtcNow - stream.StartedAtUtc, writer.BytesWritten, stream.DroppedSamples));
+                stoppedForLowDiskSpace = drive is not null && drive.AvailableFreeSpace < MinFreeBytes;
                 sinceProgress.Restart();
             }
         }
 
-        return new RecordingResult(writer.MetaPath, writer.SamplesWritten, stream.DroppedSamples, writer.GapCount);
+        return new RecordingResult(writer.MetaPath, writer.SamplesWritten, stream.DroppedSamples, writer.GapCount, stoppedForLowDiskSpace);
     }
 
-    private static void EnsureFreeSpace(string directory, long requiredBytes)
+    private static DriveInfo? FindDrive(string directory)
     {
-        Directory.CreateDirectory(directory);
         var fullPath = Path.GetFullPath(directory);
-        var drive = DriveInfo.GetDrives()
+        return DriveInfo.GetDrives()
             .Where(d => d.IsReady && fullPath.StartsWith(d.RootDirectory.FullName, StringComparison.Ordinal))
             .MaxBy(d => d.RootDirectory.FullName.Length);
+    }
 
-        if (drive is not null && drive.AvailableFreeSpace < requiredBytes)
+    private static void ThrowIfLowDiskSpace(DriveInfo? drive)
+    {
+        if (drive is not null && drive.AvailableFreeSpace < MinFreeBytes)
         {
-            throw new IOException(
-                $"The recording needs about {requiredBytes / 1e9:F1} GB but only {drive.AvailableFreeSpace / 1e9:F1} GB is free.");
+            throw new IOException($"Only {drive.AvailableFreeSpace / 1e9:F1} GB of disk space is free; at least {MinFreeBytes / 1e9:F0} GB is needed to record.");
         }
     }
 }

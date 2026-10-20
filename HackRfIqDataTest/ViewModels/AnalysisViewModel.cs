@@ -21,6 +21,7 @@ public sealed class AnalysisViewModel : INotifyPropertyChanged
     private const int MaxLoadedSamples = 10_000_000;
 
     private CancellationTokenSource? _waterfallCancellation;
+    private PlottedWaterfall? _plotted;
 
     public string RecordingsDirectory { get; }
 
@@ -106,6 +107,7 @@ public sealed class AnalysisViewModel : INotifyPropertyChanged
         if (recording is null)
         {
             this.WaterfallImage = null;
+            this._plotted = null;
             return;
         }
 
@@ -121,7 +123,6 @@ public sealed class AnalysisViewModel : INotifyPropertyChanged
             var data = await Task.Run(
                 () => Waterfall.Compute(capture, fftSize, MaxWaterfallRows, cancellation.Token), cancellation.Token);
 
-            this.WaterfallImage = WaterfallRenderer.Render(data);
 
             var halfSpanMHz = capture.SampleRateHz / 2 / 1e6;
             var centerMHz = capture.CenterFrequencyHz / 1e6;
@@ -131,6 +132,8 @@ public sealed class AnalysisViewModel : INotifyPropertyChanged
 
             var rowDurationMs = data.FramesPerRow * fftSize / capture.SampleRateHz * 1000;
             var startSeconds = startSample / capture.SampleRateHz;
+            this.WaterfallImage = WaterfallRenderer.Render(data);
+            this._plotted = new PlottedWaterfall(data, capture.CenterFrequencyHz, capture.SampleRateHz, startSeconds, rowDurationMs / 1000);
             this.StartTimeLabel = $"{startSeconds:F3} s";
             this.EndTimeLabel = $"{startSeconds + data.Height * rowDurationMs / 1000:F3} s";
             this.Details =
@@ -149,6 +152,34 @@ public sealed class AnalysisViewModel : INotifyPropertyChanged
             this.Details = $"Failed to plot {recording.Name}: {ex.Message}";
         }
     }
+
+    /// <summary>
+    /// Describes the point under the cursor, given as fractions (0-1) of the plot's width and height.
+    /// Returns null when nothing is plotted.
+    /// </summary>
+    public string? DescribePoint(double xFraction, double yFraction)
+    {
+        if (this._plotted is not { } plot)
+        {
+            return null;
+        }
+
+        var data = plot.Data;
+        var column = Math.Clamp((int)(xFraction * data.Width), 0, data.Width - 1);
+        var row = Math.Clamp((int)(yFraction * data.Height), 0, data.Height - 1);
+
+        // Each column is one FFT bin; after the fftshift, column Width/2 is the centre frequency.
+        var binWidthHz = plot.SampleRateHz / data.Width;
+        var offsetHz = (column - data.Width / 2) * binWidthHz;
+        var timeSeconds = plot.StartSeconds + row * plot.RowSeconds;
+
+        return $"{(plot.CenterFrequencyHz + offsetHz) / 1e6:F4} MHz ({offsetHz / 1e3:+0.0;-0.0;0.0} kHz from centre)\n" +
+               $"{timeSeconds:F4} s\n" +
+               $"{data.PowerDb[row * data.Width + column]:F1} dBFS";
+    }
+
+    private sealed record PlottedWaterfall(
+        WaterfallData Data, double CenterFrequencyHz, double SampleRateHz, double StartSeconds, double RowSeconds);
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {

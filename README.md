@@ -47,9 +47,9 @@ Enter a capture duration in milliseconds and click **capture data**. The raw I/Q
 
 ### Continuous recording
 
-Enter a start time (leave blank to start immediately) and a stop time in local time, as `yyyy-MM-dd HH:mm:ss`, and click **start recording**. Samples stream straight to disk until the stop time, or until you click **stop recording**. The status line shows elapsed time, data written and any dropped samples.
+Click **start recording** to stream samples straight to disk, and **stop recording** to finish. The status line shows elapsed time, data written and any dropped samples.
 
-Raw IQ data is large: 2 bytes per sample, so 4 MB/s (14 GB/hour) at 2 MS/s and 40 MB/s (144 GB/hour) at 20 MS/s. Recording refuses to start if the disk does not have room for the whole recording.
+Raw IQ data is large: 2 bytes per sample, so 4 MB/s (14 GB/hour) at 2 MS/s and 40 MB/s (144 GB/hour) at 20 MS/s. Recording stops by itself if free disk space drops below 1 GB.
 
 If the disk cannot keep up, samples are dropped rather than stalling the radio. The recording continues and the gap is marked in the metadata (see below).
 
