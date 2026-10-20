@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using HackRfIqDataTest.HackRf;
-using HackRfIqDataTest.Storage;
 using HackRfIqDataTest.ViewModels;
 using HackRfIqDataTest.Views;
 
@@ -18,7 +17,7 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         var userLog = new UserLog();
-        var recordingsDirectory = RecordingLibrary.DefaultDirectory;
+        var recordingsDirectory = AppSettings.Load().RecordingsDirectory;
         var analysis = new AnalysisViewModel(recordingsDirectory);
         _ = analysis.RefreshAsync();
         if (this.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

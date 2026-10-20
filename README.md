@@ -55,7 +55,19 @@ If the disk cannot keep up, samples are dropped rather than stalling the radio. 
 
 ## Recording files
 
-Recordings are saved in `~/.local/share/HackRfIqDataTest/recordings/`, each as a pair of [SigMF](https://sigmf.org) files named after the start time and centre frequency:
+Recordings are saved in the folder set by `Recordings:Directory` in `appsettings.json` (next to the executable). The default is `~/HackRfRecordings`:
+
+```json
+{
+  "Recordings": {
+    "Directory": "~/HackRfRecordings"
+  }
+}
+```
+
+A leading `~` means your home folder, and a relative path is relative to the executable. If the setting or file is missing, recordings go to `~/.local/share/HackRfIqDataTest/recordings/`. Restart the app after changing it.
+
+Each recording is a pair of [SigMF](https://sigmf.org) files named after the start time and centre frequency:
 
 - `<name>.sigmf-data` holds the raw samples exactly as the HackRF sends them: interleaved signed 8-bit I and Q values (`I0, Q0, I1, Q1, ...`). SigMF calls this format `ci8`.
 - `<name>.sigmf-meta` is JSON describing them: sample rate, centre frequency, start time, gains and hardware.
@@ -81,4 +93,14 @@ The **Analysis** tab lists the recordings in the recordings folder. Select one t
 The capture is split into blocks of *FFT size* samples. Each block is multiplied by a Hann window and converted to a power spectrum with an FFT (`Analysis/Fft.cs`, `Analysis/Waterfall.cs`). A larger FFT size gives finer frequency resolution (bin width = sample rate / FFT size) but fewer rows in time. If a capture would give more than 1000 rows, neighbouring spectra are averaged together.
 
 A spike at the centre frequency is normal for the HackRF: it is the receiver's DC offset, not a real signal.
+
+## Exporting audio
+
+On the **Analysis** tab, select a recording, choose a **Demodulation** type, enter the signal's **Offset kHz** (signal frequency minus the recording's centre frequency, which the waterfall hover readout shows) and click **export**. The whole recording is demodulated to a 16-bit mono WAV file in the recordings folder.
+
+Available demodulation types:
+
+- **FM broadcast (mono)**: shifts the station to 0 Hz, filters out a 200 kHz channel, FM-demodulates it, applies 50 µs de-emphasis (UK/Europe) and keeps the audio below 15 kHz. The steps are explained in `learning-journal.md` and implemented in `Demodulation/FmBroadcastDemodulator.cs`.
+
+Tip: tune so the station is off-centre (for example 106.5 – 108.5 MHz for a station at 107.2 MHz, giving an offset of -300 kHz), so it does not sit on the HackRF's DC spike.
 

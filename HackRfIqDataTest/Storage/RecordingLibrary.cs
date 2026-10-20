@@ -17,7 +17,7 @@ namespace HackRfIqDataTest.Storage;
 public static class RecordingLibrary
 {
     /// <summary>
-    /// ~/.local/share/HackRfIqDataTest/recordings on Linux.
+    /// Used when appsettings.json does not set a folder: ~/.local/share/HackRfIqDataTest/recordings on Linux.
     /// </summary>
     public static string DefaultDirectory { get; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HackRfIqDataTest", "recordings");

@@ -4,109 +4,208 @@
              xmlns:models="using:HackRfIqDataTest.Models"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="850"
              x:Class="HackRfIqDataTest.Views.AnalysisView"
              x:DataType="vm:AnalysisViewModel">
 
-    <Grid Margin="10">
+    <UserControl.Styles>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16"/>
+        </Style>
+        <Style Selector="TextBlock.heading">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="TextBlock.muted">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+        </Style>
+        <!-- A label sitting above its input. -->
+        <Style Selector="StackPanel.field">
+            <Setter Property="Spacing" Value="4"/>
+        </Style>
+        <Style Selector="StackPanel.field > TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Margin="16">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="520"/>
-            <ColumnDefinition Width="10"/>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="480" MinWidth="320"/>
+            <ColumnDefinition Width="16"/>
+            <ColumnDefinition Width="*" MinWidth="400"/>
         </Grid.ColumnDefinitions>
 
+        <!-- Left: recordings, and exporting the selected one -->
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="10"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="10"/>
                 <RowDefinition/>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10">
-                <Button Content="refresh" Command="{Binding RefreshRecordings}"/>
-                <TextBlock Text="{Binding RecordingsDirectory}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                           ToolTip.Tip="{Binding RecordingsDirectory}" MaxWidth="420"/>
-            </StackPanel>
+            <Border Grid.Row="0" Classes="card">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="4"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="12"/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10">
-                <TextBlock Text="FFT size" VerticalAlignment="Center"/>
-                <ComboBox ItemsSource="{Binding FftSizes}" SelectedItem="{Binding SelectedFftSize, Mode=TwoWay}" Width="100"/>
-                <TextBlock Text="Start s" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                <TextBox Text="{Binding StartOffsetSeconds}" Width="80"/>
-                <TextBlock Text="Length ms" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding LengthMs}" Width="80"/>
-                <Button Content="plot" Command="{Binding Plot}"/>
-            </StackPanel>
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Classes="heading" Text="Recordings" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Content="refresh" Command="{Binding RefreshRecordings}"/>
+                    </Grid>
 
-            <DataGrid Grid.Row="4" ItemsSource="{Binding Recordings}" SelectedItem="{Binding SelectedRecording, Mode=TwoWay}"
-                      IsReadOnly="True" AutoGenerateColumns="False" GridLinesVisibility="All" BorderThickness="1"
-                      SelectionMode="Single">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Started (UTC)" x:DataType="models:RecordingSummary"
-                                        Binding="{Binding StartedAtUtc, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"/>
-                    <DataGridTextColumn Header="Centre MHz" x:DataType="models:RecordingSummary"
-                                        Binding="{Binding CenterFrequencyMHz, StringFormat='{}{0:F3}'}"/>
-                    <DataGridTextColumn Header="MS/s" x:DataType="models:RecordingSummary"
-                                        Binding="{Binding SampleRateMsps, StringFormat='{}{0:F1}'}"/>
-                    <DataGridTextColumn Header="Seconds" x:DataType="models:RecordingSummary"
-                                        Binding="{Binding DurationSeconds, StringFormat='{}{0:F3}'}"/>
-                    <DataGridTextColumn Header="MB" x:DataType="models:RecordingSummary"
-                                        Binding="{Binding SizeMB, StringFormat='{}{0:F1}'}"/>
-                    <DataGridTextColumn Header="Gaps" Binding="{Binding GapCount}" x:DataType="models:RecordingSummary"/>
-                </DataGrid.Columns>
-            </DataGrid>
-        </Grid>
+                    <TextBlock Grid.Row="2" Classes="muted" Text="{Binding RecordingsDirectory}"
+                               TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding RecordingsDirectory}"/>
 
-        <Grid Grid.Column="2">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="10"/>
-                <RowDefinition/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="5"/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-
-            <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding Details}" TextWrapping="Wrap"/>
-
-            <!-- Time runs downwards: top row is the start of the capture. -->
-            <Grid Grid.Row="2" Grid.Column="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="{Binding StartTimeLabel}" HorizontalAlignment="Right"/>
-                <TextBlock Grid.Row="2" Text="{Binding EndTimeLabel}" HorizontalAlignment="Right"/>
-            </Grid>
-
-            <Border Grid.Row="2" Grid.Column="2" Background="Black" Cursor="Cross"
-                    PointerMoved="OnWaterfallPointerMoved" PointerExited="OnWaterfallPointerExited">
-                <Panel>
-                    <Image Source="{Binding WaterfallImage}" Stretch="Fill"/>
-                    <Canvas IsHitTestVisible="False">
-                        <Border x:Name="Readout" IsVisible="False" Background="#D0202020" CornerRadius="3" Padding="6,3">
-                            <TextBlock x:Name="ReadoutText" Foreground="White" FontSize="12"/>
-                        </Border>
-                    </Canvas>
-                </Panel>
+                    <DataGrid Grid.Row="4" ItemsSource="{Binding Recordings}" SelectedItem="{Binding SelectedRecording, Mode=TwoWay}"
+                              IsReadOnly="True" AutoGenerateColumns="False" GridLinesVisibility="Horizontal"
+                              SelectionMode="Single" CanUserResizeColumns="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Started (UTC)" x:DataType="models:RecordingSummary"
+                                                Binding="{Binding StartedAtUtc, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"/>
+                            <DataGridTextColumn Header="Centre MHz" x:DataType="models:RecordingSummary"
+                                                Binding="{Binding CenterFrequencyMHz, StringFormat='{}{0:F3}'}"/>
+                            <DataGridTextColumn Header="MS/s" x:DataType="models:RecordingSummary"
+                                                Binding="{Binding SampleRateMsps, StringFormat='{}{0:F1}'}"/>
+                            <DataGridTextColumn Header="Seconds" x:DataType="models:RecordingSummary"
+                                                Binding="{Binding DurationSeconds, StringFormat='{}{0:F3}'}"/>
+                            <DataGridTextColumn Header="MB" x:DataType="models:RecordingSummary"
+                                                Binding="{Binding SizeMB, StringFormat='{}{0:F1}'}"/>
+                            <DataGridTextColumn Header="Gaps" Binding="{Binding GapCount}" x:DataType="models:RecordingSummary"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
             </Border>
 
-            <Grid Grid.Row="3" Grid.Column="2">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="{Binding LowFrequencyLabel}" HorizontalAlignment="Left"/>
-                <TextBlock Grid.Column="1" Text="{Binding CenterFrequencyLabel}" HorizontalAlignment="Center"/>
-                <TextBlock Grid.Column="2" Text="{Binding HighFrequencyLabel}" HorizontalAlignment="Right"/>
-            </Grid>
+            <Border Grid.Row="2" Classes="card">
+                <StackPanel Spacing="12">
+                    <TextBlock Classes="heading" Text="Export audio"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="130"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Classes="field">
+                            <TextBlock Text="Demodulation"/>
+                            <ComboBox ItemsSource="{Binding DemodulationModes}" SelectedItem="{Binding SelectedDemodulation, Mode=TwoWay}"
+                                      HorizontalAlignment="Stretch"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Classes="field">
+                            <TextBlock Text="Offset kHz"/>
+                            <TextBox Text="{Binding SignalOffsetKHz}"
+                                     ToolTip.Tip="Signal frequency minus the recording's centre frequency. Hover over the signal on the waterfall to read it."/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Button Classes="accent" Content="export WAV" Command="{Binding Export}"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+
+                    <TextBlock Classes="muted" Text="{Binding ExportStatus}" TextWrapping="Wrap"
+                               IsVisible="{Binding ExportStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                </StackPanel>
+            </Border>
         </Grid>
+
+        <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent"/>
+
+        <!-- Right: the waterfall and its settings -->
+        <Border Grid.Column="2" Classes="card">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Classes="heading" Text="Waterfall"/>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="16">
+                    <StackPanel Classes="field">
+                        <TextBlock Text="FFT size"/>
+                        <ComboBox ItemsSource="{Binding FftSizes}" SelectedItem="{Binding SelectedFftSize, Mode=TwoWay}" Width="110"/>
+                    </StackPanel>
+                    <StackPanel Classes="field">
+                        <TextBlock Text="Start s"/>
+                        <TextBox Text="{Binding StartOffsetSeconds}" Width="100"/>
+                    </StackPanel>
+                    <StackPanel Classes="field">
+                        <TextBlock Text="Length ms"/>
+                        <TextBox Text="{Binding LengthMs}" Width="100"/>
+                    </StackPanel>
+                    <Button Content="plot" Command="{Binding Plot}" VerticalAlignment="Bottom"/>
+                </StackPanel>
+
+                <TextBlock Grid.Row="4" Classes="muted" Text="{Binding Details}" TextWrapping="Wrap"/>
+
+                <Grid Grid.Row="6">
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition Height="6"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Time runs downwards: top row is the start of the plotted section. -->
+                    <Grid Grid.Row="0" Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Classes="muted" Text="{Binding StartTimeLabel}" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Row="2" Classes="muted" Text="{Binding EndTimeLabel}" HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <Border Grid.Row="0" Grid.Column="2" Background="Black" CornerRadius="4" ClipToBounds="True" Cursor="Cross"
+                            PointerMoved="OnWaterfallPointerMoved" PointerExited="OnWaterfallPointerExited">
+                        <Panel>
+                            <Image Source="{Binding WaterfallImage}" Stretch="Fill"/>
+                            <Canvas IsHitTestVisible="False">
+                                <Border x:Name="Readout" IsVisible="False" Background="#D0202020" CornerRadius="3" Padding="6,3">
+                                    <TextBlock x:Name="ReadoutText" Foreground="White" FontSize="12"/>
+                                </Border>
+                            </Canvas>
+                        </Panel>
+                    </Border>
+
+                    <Grid Grid.Row="2" Grid.Column="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Classes="muted" Text="{Binding LowFrequencyLabel}" HorizontalAlignment="Left"/>
+                        <TextBlock Grid.Column="1" Classes="muted" Text="{Binding CenterFrequencyLabel}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Classes="muted" Text="{Binding HighFrequencyLabel}" HorizontalAlignment="Right"/>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -9,6 +10,7 @@ using System.Windows.Input;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
 using HackRfIqDataTest.Analysis;
+using HackRfIqDataTest.Demodulation;
 using HackRfIqDataTest.Models;
 using HackRfIqDataTest.Storage;
 
@@ -71,7 +73,18 @@ public sealed class AnalysisViewModel : INotifyPropertyChanged
 
     public string EndTimeLabel { get; private set => _ = this.SetField(ref field, value); } = "";
 
+    public IReadOnlyList<DemodulationMode> DemodulationModes => DemodulationMode.All;
+
+    public DemodulationMode SelectedDemodulation { get; set => _ = this.SetField(ref field, value); } = DemodulationMode.All[0];
+
+    /// <summary>Signal frequency minus the recording's centre frequency, as shown by the waterfall hover readout.</summary>
+    public double SignalOffsetKHz { get; set => _ = this.SetField(ref field, value); }
+
+    public string ExportStatus { get; private set => _ = this.SetField(ref field, value); } = "";
+
     public ICommand RefreshRecordings { get; }
+
+    public ICommand Export { get; }
 
     public ICommand Plot { get; }
 
@@ -82,6 +95,7 @@ public sealed class AnalysisViewModel : INotifyPropertyChanged
         this.RecordingsDirectory = recordingsDirectory;
         this.RefreshRecordings = new AsyncRelayCommand(this.RefreshAsync);
         this.Plot = new AsyncRelayCommand(this.UpdateWaterfall);
+        this.Export = new AsyncRelayCommand(this.OnExportRequested);
     }
 
     public async Task RefreshAsync()
@@ -150,6 +164,31 @@ public sealed class AnalysisViewModel : INotifyPropertyChanged
         catch (Exception ex)
         {
             this.Details = $"Failed to plot {recording.Name}: {ex.Message}";
+        }
+    }
+
+    private async Task OnExportRequested()
+    {
+        if (this.SelectedRecording is not { } recording)
+        {
+            this.ExportStatus = "Select a recording to export";
+            return;
+        }
+
+        var mode = this.SelectedDemodulation;
+        var offsetHz = this.SignalOffsetKHz * 1e3;
+        var path = Path.Combine(this.RecordingsDirectory, $"{recording.Name}_{mode.FileTag}_{this.SignalOffsetKHz:0.###}kHz.wav");
+        try
+        {
+            var demodulator = mode.Create(recording.Tuning.SampleRateHz, offsetHz);
+            var progress = new Progress<double>(fraction => this.ExportStatus = $"Exporting... {fraction:P0}");
+            await Task.Run(() => AudioExporter.ExportAsync(recording, demodulator, path, progress, CancellationToken.None));
+            this.ExportStatus =
+                $"Exported {(recording.Tuning.CenterFrequencyHz + offsetHz) / 1e6:F3} MHz as {demodulator.AudioSampleRate} Hz audio to {path}";
+        }
+        catch (Exception ex)
+        {
+            this.ExportStatus = $"Export failed: {ex.Message}";
         }
     }
 
