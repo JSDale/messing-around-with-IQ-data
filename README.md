@@ -49,7 +49,13 @@ The HackRF has three gain stages, set under **Receiver gain** and applied to eve
 - **VGA** (baseband amplifier): 0–62 dB in 2 dB steps. Use it to fill the 8-bit sample range.
 - **Amp**: an extra 14 dB at the antenna input. Helps weak signals, but strong nearby signals can overload it.
 
-After each capture the log shows the sample **levels**: RMS and peak (out of 128) and the percentage of samples clipped at ±127. Aim for an RMS of roughly 20–40 with no clipping. "low" means increase the gain; "clipping" means reduce it. For FM broadcast on the stock antenna, LNA 32 and VGA 30 is a reasonable starting point.
+After each capture the log shows the sample **levels**: RMS and peak (out of 128) and the percentage of samples clipped at ±127.
+
+- **clipping**: reduce the gain. Clipped samples distort every signal in the capture.
+- **very low** (RMS below 1): increase the gain. At this level the rounding to 8 bits adds noise of its own.
+- **OK**: anything in between. A low RMS such as 2–3 is fine. More gain amplifies the receiver's noise along with the signal, so it does not make a signal clearer. Judge signal quality by how far the signal stands above the noise floor on the waterfall.
+
+To pull a weak signal further above the noise, raise the **LNA** or turn on the **Amp** (they come before most of the receiver's noise), or improve the antenna. Raising the VGA alone mainly makes everything louder.
 
 ### Single capture
 
