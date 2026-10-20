@@ -18,19 +18,21 @@ public static class WaterfallRenderer
         (1.0, 255, 0, 0),
     ];
 
-    public static unsafe WriteableBitmap Render(WaterfallData data)
+    /// <param name="floorDb">Power drawn as black; anything weaker is also black.</param>
+    /// <param name="peakDb">Power drawn as red; anything stronger is also red.</param>
+    public static unsafe WriteableBitmap Render(WaterfallData data, double floorDb, double peakDb)
     {
         var bitmap = new WriteableBitmap(
             new PixelSize(data.Width, data.Height), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Opaque);
 
-        var range = Math.Max(data.PeakDb - data.FloorDb, 1e-6);
+        var range = Math.Max(peakDb - floorDb, 1e-6);
         using var buffer = bitmap.Lock();
         for (var y = 0; y < data.Height; y++)
         {
             var row = (uint*)(buffer.Address + y * buffer.RowBytes);
             for (var x = 0; x < data.Width; x++)
             {
-                var level = (data.PowerDb[y * data.Width + x] - data.FloorDb) / range;
+                var level = (data.PowerDb[y * data.Width + x] - floorDb) / range;
                 row[x] = ToBgra(Math.Clamp(level, 0, 1));
             }
         }

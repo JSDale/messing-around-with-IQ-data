@@ -24,6 +24,26 @@ public sealed class IqCapture
 
     public int SampleCount => this.Samples.Length / 2;
 
+    public SampleLevels GetLevels()
+    {
+        long sumOfSquares = 0;
+        var peak = 0;
+        var clipped = 0;
+        foreach (var value in this.Samples)
+        {
+            var sample = (sbyte)value;
+            sumOfSquares += sample * sample;
+            peak = System.Math.Max(peak, System.Math.Abs((int)sample));
+            if (sample is sbyte.MaxValue or sbyte.MinValue)
+            {
+                clipped++;
+            }
+        }
+
+        return new SampleLevels(
+            System.Math.Sqrt((double)sumOfSquares / this.Samples.Length), peak, 100.0 * clipped / this.Samples.Length);
+    }
+
     /// <summary>
     /// Splits the interleaved bytes into individual I/Q samples without any scaling.
     /// </summary>

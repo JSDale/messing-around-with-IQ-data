@@ -30,6 +30,16 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public double CaptureDurationMs { get; set => _ = this.SetField(ref field, value); } = 100;
 
+    public IReadOnlyList<uint> LnaGains { get; } = [0, 8, 16, 24, 32, 40];
+
+    public IReadOnlyList<uint> VgaGains { get; } = Enumerable.Range(0, 32).Select(step => (uint)step * 2).ToList();
+
+    public uint LnaGainDb { get; set => _ = this.SetField(ref field, value); } = 16;
+
+    public uint VgaGainDb { get; set => _ = this.SetField(ref field, value); } = 20;
+
+    public bool AmpEnabled { get; set => _ = this.SetField(ref field, value); }
+
     public string RecordingStatus { get; private set => _ = this.SetField(ref field, value); } = "Not recording";
 
     public ICommand CaptureData => this._captureData;
@@ -84,15 +94,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
             this._lastCapture = capture;
             this._lastCaptureSaved = false;
             this.Samples = capture.ToIqSamples();
+            var levels = capture.GetLevels();
             this.CaptureDetails =
                 $"{capture.CapturedAtUtc:u}  |  Centre {capture.CenterFrequencyHz / 1e6:F3} MHz  |  " +
                 $"{capture.SampleRateHz / 1e6:F1} MS/s  |  {capture.SampleCount:N0} samples  |  " +
-                $"LNA {capture.Tuning.LnaGainDb} dB, VGA {capture.Tuning.VgaGainDb} dB, Amp {(capture.Tuning.AmpEnabled ? "on" : "off")}";
+                $"LNA {capture.Tuning.LnaGainDb} dB, VGA {capture.Tuning.VgaGainDb} dB, Amp {(capture.Tuning.AmpEnabled ? "on" : "off")}\n" +
+                $"Levels: {levels}";
 
             var meanPower = capture.ToComplex().Average(sample => sample.Real * sample.Real + sample.Imaginary * sample.Imaginary);
             this.UserLog.Log.Add(
                 $"Captured {capture.SampleCount:N0} samples at {capture.CenterFrequencyHz / 1e6:F3} MHz, " +
                 $"{capture.SampleRateHz / 1e6:F1} MS/s, mean power {10 * Math.Log10(meanPower):F1} dBFS");
+            this.UserLog.Log.Add($"Levels: {levels}");
         }
         catch (Exception ex)
         {
@@ -170,6 +183,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         this._radio.SetStartFrequency(this.StartFrequency * 1e6);
         this._radio.SetEndFrequency(this.EndFrequency * 1e6);
+        this._radio.SetLnaGain(this.LnaGainDb);
+        this._radio.SetVgaGain(this.VgaGainDb);
+        this._radio.SetAmpEnabled(this.AmpEnabled);
     }
 
     private void NotifyCommandsChanged()

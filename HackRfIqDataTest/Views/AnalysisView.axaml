@@ -141,20 +141,35 @@
 
                 <TextBlock Grid.Row="0" Classes="heading" Text="Waterfall"/>
 
-                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="16">
-                    <StackPanel Classes="field">
-                        <TextBlock Text="FFT size"/>
-                        <ComboBox ItemsSource="{Binding FftSizes}" SelectedItem="{Binding SelectedFftSize, Mode=TwoWay}" Width="110"/>
+                <StackPanel Grid.Row="2" Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <StackPanel Classes="field">
+                            <TextBlock Text="FFT size"/>
+                            <ComboBox ItemsSource="{Binding FftSizes}" SelectedItem="{Binding SelectedFftSize, Mode=TwoWay}" Width="110"/>
+                        </StackPanel>
+                        <StackPanel Classes="field">
+                            <TextBlock Text="Start s"/>
+                            <TextBox Text="{Binding StartOffsetSeconds}" Width="100"/>
+                        </StackPanel>
+                        <StackPanel Classes="field">
+                            <TextBlock Text="Length ms"/>
+                            <TextBox Text="{Binding LengthMs}" Width="100"/>
+                        </StackPanel>
+                        <Button Content="plot" Command="{Binding Plot}" VerticalAlignment="Bottom"/>
                     </StackPanel>
-                    <StackPanel Classes="field">
-                        <TextBlock Text="Start s"/>
-                        <TextBox Text="{Binding StartOffsetSeconds}" Width="100"/>
+
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <CheckBox Content="auto colour range" IsChecked="{Binding AutoColourRange}" VerticalAlignment="Bottom"
+                                  ToolTip.Tip="Stretch the colours from the noise floor to the strongest point. Turn off to compare plots on the same scale."/>
+                        <StackPanel Classes="field" IsEnabled="{Binding !AutoColourRange}">
+                            <TextBlock Text="Black at dBFS"/>
+                            <TextBox Text="{Binding ColourMinDb}" Width="100"/>
+                        </StackPanel>
+                        <StackPanel Classes="field" IsEnabled="{Binding !AutoColourRange}">
+                            <TextBlock Text="Red at dBFS"/>
+                            <TextBox Text="{Binding ColourMaxDb}" Width="100"/>
+                        </StackPanel>
                     </StackPanel>
-                    <StackPanel Classes="field">
-                        <TextBlock Text="Length ms"/>
-                        <TextBox Text="{Binding LengthMs}" Width="100"/>
-                    </StackPanel>
-                    <Button Content="plot" Command="{Binding Plot}" VerticalAlignment="Bottom"/>
                 </StackPanel>
 
                 <TextBlock Grid.Row="4" Classes="muted" Text="{Binding Details}" TextWrapping="Wrap"/>

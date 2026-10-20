@@ -41,6 +41,16 @@ dotnet run --project HackRfIqDataTest/HackRfIqDataTest.csproj
 
 Enter a start and end frequency in MHz. The radio is centred on the midpoint of the two frequencies, and the sample rate matches the span (2 MHz minimum, 20 MHz maximum). If libhackrf is missing or no device is connected, the error is shown in the log panel.
 
+### Receiver gain
+
+The HackRF has three gain stages, set under **Receiver gain** and applied to every capture and recording:
+
+- **LNA** (RF low-noise amplifier): 0–40 dB in 8 dB steps. Raise this first for weak signals.
+- **VGA** (baseband amplifier): 0–62 dB in 2 dB steps. Use it to fill the 8-bit sample range.
+- **Amp**: an extra 14 dB at the antenna input. Helps weak signals, but strong nearby signals can overload it.
+
+After each capture the log shows the sample **levels**: RMS and peak (out of 128) and the percentage of samples clipped at ±127. Aim for an RMS of roughly 20–40 with no clipping. "low" means increase the gain; "clipping" means reduce it. For FM broadcast on the stock antenna, LNA 32 and VGA 30 is a reasonable starting point.
+
 ### Single capture
 
 Enter a capture duration in milliseconds and click **capture data**. The raw I/Q values are shown in the table. A capture is limited to 10 million samples (500 ms at 20 MS/s, 5 s at 2 MS/s). Click **save to file** to save it as a recording.
@@ -89,6 +99,8 @@ The **Analysis** tab lists the recordings in the recordings folder. Select one t
 - The horizontal axis is frequency, from centre - sample rate/2 to centre + sample rate/2.
 - The vertical axis is time, with the earliest samples at the top.
 - Colour shows power in dBFS, from black (noise floor) through blue, green and yellow to red (strongest signal).
+
+With **auto colour range** on, the colours stretch from the plot's noise floor to its strongest point, which makes even a weak signal look bright. Turn it off and set **Black at dBFS** and **Red at dBFS** to see true signal strength, or to compare plots on the same scale. The details line above the plot shows the noise floor, peak and sample levels.
 
 The capture is split into blocks of *FFT size* samples. Each block is multiplied by a Hann window and converted to a power spectrum with an FFT (`Analysis/Fft.cs`, `Analysis/Waterfall.cs`). A larger FFT size gives finer frequency resolution (bin width = sample rate / FFT size) but fewer rows in time. If a capture would give more than 1000 rows, neighbouring spectra are averaged together.
 

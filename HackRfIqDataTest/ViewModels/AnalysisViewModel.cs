@@ -59,6 +59,43 @@ public sealed class AnalysisViewModel : INotifyPropertyChanged
 
     public double LengthMs { get; set => _ = this.SetField(ref field, value); } = 1000;
 
+    /// <summary>When on, colours span the plotted data's noise floor to its peak, so weak signals can look strong.</summary>
+    public bool AutoColourRange
+    {
+        get;
+        set
+        {
+            if (this.SetField(ref field, value))
+            {
+                this.RenderPlotted();
+            }
+        }
+    } = true;
+
+    public double ColourMinDb
+    {
+        get;
+        set
+        {
+            if (this.SetField(ref field, value))
+            {
+                this.RenderPlotted();
+            }
+        }
+    } = -80;
+
+    public double ColourMaxDb
+    {
+        get;
+        set
+        {
+            if (this.SetField(ref field, value))
+            {
+                this.RenderPlotted();
+            }
+        }
+    } = -20;
+
     public Bitmap? WaterfallImage { get; private set => _ = this.SetField(ref field, value); }
 
     public string Details { get; private set => _ = this.SetField(ref field, value); } = "Select a capture to plot";
@@ -146,8 +183,8 @@ public sealed class AnalysisViewModel : INotifyPropertyChanged
 
             var rowDurationMs = data.FramesPerRow * fftSize / capture.SampleRateHz * 1000;
             var startSeconds = startSample / capture.SampleRateHz;
-            this.WaterfallImage = WaterfallRenderer.Render(data);
             this._plotted = new PlottedWaterfall(data, capture.CenterFrequencyHz, capture.SampleRateHz, startSeconds, rowDurationMs / 1000);
+            this.RenderPlotted();
             this.StartTimeLabel = $"{startSeconds:F3} s";
             this.EndTimeLabel = $"{startSeconds + data.Height * rowDurationMs / 1000:F3} s";
             this.Details =
@@ -155,7 +192,7 @@ public sealed class AnalysisViewModel : INotifyPropertyChanged
                 (recording.GapCount > 0 ? $"Recording has {recording.GapCount} gap(s) from dropped samples, so the time axis is approximate. " : "") +
                 $"Bin width {capture.SampleRateHz / fftSize / 1e3:F2} kHz, " +
                 $"{data.Height} rows of {rowDurationMs:F3} ms ({data.FramesPerRow} FFT(s) averaged per row), " +
-                $"colour range {data.FloorDb:F1} to {data.PeakDb:F1} dBFS";
+                $"noise floor {data.FloorDb:F1} dBFS, peak {data.PeakDb:F1} dBFS. Levels: {capture.GetLevels()}";
         }
         catch (OperationCanceledException)
         {
@@ -165,6 +202,17 @@ public sealed class AnalysisViewModel : INotifyPropertyChanged
         {
             this.Details = $"Failed to plot {recording.Name}: {ex.Message}";
         }
+    }
+
+    private void RenderPlotted()
+    {
+        if (this._plotted is not { } plot)
+        {
+            return;
+        }
+
+        var (floorDb, peakDb) = this.AutoColourRange ? (plot.Data.FloorDb, plot.Data.PeakDb) : (this.ColourMinDb, this.ColourMaxDb);
+        this.WaterfallImage = WaterfallRenderer.Render(plot.Data, floorDb, peakDb);
     }
 
     private async Task OnExportRequested()

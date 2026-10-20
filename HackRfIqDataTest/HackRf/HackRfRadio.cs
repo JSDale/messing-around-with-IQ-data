@@ -22,15 +22,9 @@ public sealed class HackRfRadio : ISoftwareDefineRadio
 
     private double _startFrequencyHz;
     private double _endFrequencyHz;
-
-    /// <summary>RF LNA gain, 0-40 dB in 8 dB steps.</summary>
-    public uint LnaGainDb { get; set; } = 16;
-
-    /// <summary>Baseband VGA gain, 0-62 dB in 2 dB steps.</summary>
-    public uint VgaGainDb { get; set; } = 20;
-
-    /// <summary>Enables the 14 dB front-end amplifier. Leave off unless the signal is weak.</summary>
-    public bool AmpEnabled { get; set; }
+    private uint _lnaGainDb = 16;
+    private uint _vgaGainDb = 20;
+    private bool _ampEnabled;
 
     public void SetStartFrequency(double startFrequencyHz)
     {
@@ -40,6 +34,21 @@ public sealed class HackRfRadio : ISoftwareDefineRadio
     public void SetEndFrequency(double endFrequencyHz)
     {
         this._endFrequencyHz = endFrequencyHz;
+    }
+
+    public void SetLnaGain(uint lnaGainDb)
+    {
+        this._lnaGainDb = lnaGainDb;
+    }
+
+    public void SetVgaGain(uint vgaGainDb)
+    {
+        this._vgaGainDb = vgaGainDb;
+    }
+
+    public void SetAmpEnabled(bool ampEnabled)
+    {
+        this._ampEnabled = ampEnabled;
     }
 
     public Task<IIqStream> StartStreaming(CancellationToken cancellationToken = default)
@@ -116,8 +125,8 @@ public sealed class HackRfRadio : ISoftwareDefineRadio
         return new RadioTuning(
             (this._startFrequencyHz + this._endFrequencyHz) / 2,
             Math.Max(spanHz, MinSampleRateHz),
-            this.LnaGainDb,
-            this.VgaGainDb,
-            this.AmpEnabled);
+            this._lnaGainDb,
+            this._vgaGainDb,
+            this._ampEnabled);
     }
 }

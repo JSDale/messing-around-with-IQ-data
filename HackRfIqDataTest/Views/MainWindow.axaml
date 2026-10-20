@@ -5,8 +5,8 @@
         xmlns:views="using:HackRfIqDataTest.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="950"
-        Width="1100" Height="950"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="1000"
+        Width="1100" Height="1000"
         x:Class="HackRfIqDataTest.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
@@ -16,7 +16,7 @@
         <TabItem Header="Capture">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="420"/>
+                    <RowDefinition Height="560"/>
                     <RowDefinition Height="10"/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
@@ -42,6 +42,27 @@
                     <StackPanel Classes="field" Orientation="Horizontal">
                         <TextBlock Text="End Frequency MHz"/>
                         <TextBox Text="{Binding EndFrequency}" Width="180"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Receiver gain" FontWeight="SemiBold" Margin="0,10,0,0"/>
+
+                    <StackPanel Classes="field" Orientation="Horizontal"
+                                ToolTip.Tip="RF low-noise amplifier, before the mixer. Raise this first for weak signals.">
+                        <TextBlock Text="LNA dB (RF)"/>
+                        <ComboBox ItemsSource="{Binding LnaGains}" SelectedItem="{Binding LnaGainDb, Mode=TwoWay}" Width="180"/>
+                    </StackPanel>
+
+                    <StackPanel Classes="field" Orientation="Horizontal"
+                                ToolTip.Tip="Baseband amplifier, after the mixer. Use it to fill the 8-bit range without clipping.">
+                        <TextBlock Text="VGA dB (baseband)"/>
+                        <ComboBox ItemsSource="{Binding VgaGains}" SelectedItem="{Binding VgaGainDb, Mode=TwoWay}" Width="180"
+                                  MaxDropDownHeight="300"/>
+                    </StackPanel>
+
+                    <StackPanel Classes="field" Orientation="Horizontal"
+                                ToolTip.Tip="Extra 14 dB at the antenna input. Helps weak signals, but strong nearby signals can overload it.">
+                        <TextBlock Text="Amp (+14 dB)"/>
+                        <CheckBox IsChecked="{Binding AmpEnabled}"/>
                     </StackPanel>
 
                     <TextBlock Text="Single capture" FontWeight="SemiBold" Margin="0,10,0,0"/>
