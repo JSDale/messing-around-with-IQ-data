@@ -1,57 +1,122 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:HackRfIqDataTest.ViewModels"
+        xmlns:models="using:HackRfIqDataTest.Models"
+        xmlns:views="using:HackRfIqDataTest.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="950"
+        Width="1100" Height="950"
         x:Class="HackRfIqDataTest.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="HackRfIqDataTest">
 
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition Width="10"/>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
+    <TabControl>
+        <TabItem Header="Capture">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="500"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
         
-        <Grid Grid.Column="0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="15"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="10"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="10"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+                <StackPanel Grid.Column="0" Margin="15,15,0,0" Spacing="10">
+                    <StackPanel.Styles>
+                        <Style Selector="StackPanel.field > TextBlock">
+                            <Setter Property="Width" Value="170"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </StackPanel.Styles>
+
+                    <StackPanel Classes="field" Orientation="Horizontal">
+                        <TextBlock Text="Start Frequency MHz"/>
+                        <TextBox Text="{Binding StartFrequency}" Width="180"/>
+                    </StackPanel>
         
-            <StackPanel Grid.Column="0" Grid.Row="1" Orientation="Horizontal" Margin="15,30,0,0">
-                <TextBlock Text="Start Frequency MHz" Margin="0,0,25,0"  VerticalAlignment="Center"/>
-                <TextBox Text="{Binding StartFrequency}" Width="150"/>
-            </StackPanel>
+                    <StackPanel Classes="field" Orientation="Horizontal">
+                        <TextBlock Text="End Frequency MHz"/>
+                        <TextBox Text="{Binding EndFrequency}" Width="180"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Single capture" FontWeight="SemiBold" Margin="0,10,0,0"/>
         
-            <StackPanel Grid.Column="0" Grid.Row="3" Orientation="Horizontal" Margin="15,0,0,0">
-                <TextBlock Text="End Frequency MHz" Margin="0,0,31,0" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding EndFrequency}" Width="150"/>
-            </StackPanel>
+                    <StackPanel Classes="field" Orientation="Horizontal">
+                        <TextBlock Text="Capture Duration ms"/>
+                        <TextBox Text="{Binding CaptureDurationMs}" Width="180"/>
+                    </StackPanel>
         
-            <Button Grid.Column="0" Grid.Row="5" Height="35" Content="capture data" VerticalContentAlignment="Center" 
-                    Margin="15,0,0,0" Command="{Binding CaptureData}"/>
-        </Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Height="35" Content="capture data" VerticalContentAlignment="Center" 
+                                Command="{Binding CaptureData}"/>
+                        <Button Height="35" Content="save to file" VerticalContentAlignment="Center" 
+                                Command="{Binding SaveCapture}"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Continuous recording" FontWeight="SemiBold" Margin="0,10,0,0"/>
+
+                    <StackPanel Classes="field" Orientation="Horizontal">
+                        <TextBlock Text="Start (blank = now)"/>
+                        <TextBox Text="{Binding RecordingStartTime}" Width="180" Watermark="yyyy-MM-dd HH:mm:ss"/>
+                    </StackPanel>
+
+                    <StackPanel Classes="field" Orientation="Horizontal">
+                        <TextBlock Text="Stop"/>
+                        <TextBox Text="{Binding RecordingStopTime}" Width="180" Watermark="yyyy-MM-dd HH:mm:ss"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Height="35" Content="start recording" VerticalContentAlignment="Center" 
+                                Command="{Binding StartRecording}"/>
+                        <Button Height="35" Content="stop recording" VerticalContentAlignment="Center" 
+                                Command="{Binding StopRecording}"/>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding RecordingStatus}"/>
+                </StackPanel>
         
-        <Grid Grid.Column="2">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="10"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="10"/>
-                <RowDefinition/>
-            </Grid.RowDefinitions>
+                <Grid Grid.Column="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
             
-            <Button Grid.Row="1" Content="Clear" HorizontalAlignment="Right" 
-                    Command="{Binding ClearLog}" Margin="0,0,35,0"/>
+                    <Button Grid.Row="1" Content="Clear" HorizontalAlignment="Right" 
+                            Command="{Binding ClearLog}" Margin="0,0,35,0"/>
             
-            <ListBox Grid.Row="3" ItemsSource="{Binding Log}" Margin="0,0,10,0"/>
-        </Grid>
-    </Grid>
+                    <ListBox Grid.Row="3" ItemsSource="{Binding UserLog.Log}" Margin="0,0,10,0"/>
+                </Grid>
+        
+                <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="15,0,10,10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="5"/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+            
+                    <TextBlock Grid.Row="0" Text="{Binding CaptureDetails}"/>
+            
+                    <DataGrid Grid.Row="2" ItemsSource="{Binding Samples}" IsReadOnly="True"
+                              AutoGenerateColumns="False" GridLinesVisibility="All" BorderThickness="1">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Index" Binding="{Binding Index}" x:DataType="models:IqSample" Width="120"/>
+                            <DataGridTextColumn Header="I" Binding="{Binding I}" x:DataType="models:IqSample" Width="100"/>
+                            <DataGridTextColumn Header="Q" Binding="{Binding Q}" x:DataType="models:IqSample" Width="100"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Grid>
+        </TabItem>
+        
+        <TabItem Header="Analysis">
+            <views:AnalysisView DataContext="{Binding Analysis}"/>
+        </TabItem>
+    </TabControl>
 </Window>

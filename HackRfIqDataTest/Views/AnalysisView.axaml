@@ -1,0 +1,104 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HackRfIqDataTest.ViewModels"
+             xmlns:models="using:HackRfIqDataTest.Models"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:Class="HackRfIqDataTest.Views.AnalysisView"
+             x:DataType="vm:AnalysisViewModel">
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="520"/>
+            <ColumnDefinition Width="10"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="10"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="10"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10">
+                <Button Content="refresh" Command="{Binding RefreshRecordings}"/>
+                <TextBlock Text="{Binding RecordingsDirectory}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                           ToolTip.Tip="{Binding RecordingsDirectory}" MaxWidth="420"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="FFT size" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding FftSizes}" SelectedItem="{Binding SelectedFftSize, Mode=TwoWay}" Width="100"/>
+                <TextBlock Text="Start s" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                <TextBox Text="{Binding StartOffsetSeconds}" Width="80"/>
+                <TextBlock Text="Length ms" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding LengthMs}" Width="80"/>
+                <Button Content="plot" Command="{Binding Plot}"/>
+            </StackPanel>
+
+            <DataGrid Grid.Row="4" ItemsSource="{Binding Recordings}" SelectedItem="{Binding SelectedRecording, Mode=TwoWay}"
+                      IsReadOnly="True" AutoGenerateColumns="False" GridLinesVisibility="All" BorderThickness="1"
+                      SelectionMode="Single">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Started (UTC)" x:DataType="models:RecordingSummary"
+                                        Binding="{Binding StartedAtUtc, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"/>
+                    <DataGridTextColumn Header="Centre MHz" x:DataType="models:RecordingSummary"
+                                        Binding="{Binding CenterFrequencyMHz, StringFormat='{}{0:F3}'}"/>
+                    <DataGridTextColumn Header="MS/s" x:DataType="models:RecordingSummary"
+                                        Binding="{Binding SampleRateMsps, StringFormat='{}{0:F1}'}"/>
+                    <DataGridTextColumn Header="Seconds" x:DataType="models:RecordingSummary"
+                                        Binding="{Binding DurationSeconds, StringFormat='{}{0:F3}'}"/>
+                    <DataGridTextColumn Header="MB" x:DataType="models:RecordingSummary"
+                                        Binding="{Binding SizeMB, StringFormat='{}{0:F1}'}"/>
+                    <DataGridTextColumn Header="Gaps" Binding="{Binding GapCount}" x:DataType="models:RecordingSummary"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="10"/>
+                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding Details}" TextWrapping="Wrap"/>
+
+            <!-- Time runs downwards: top row is the start of the capture. -->
+            <Grid Grid.Row="2" Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="{Binding StartTimeLabel}" HorizontalAlignment="Right"/>
+                <TextBlock Grid.Row="2" Text="{Binding EndTimeLabel}" HorizontalAlignment="Right"/>
+            </Grid>
+
+            <Border Grid.Row="2" Grid.Column="2" Background="Black">
+                <Image Source="{Binding WaterfallImage}" Stretch="Fill"/>
+            </Border>
+
+            <Grid Grid.Row="3" Grid.Column="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{Binding LowFrequencyLabel}" HorizontalAlignment="Left"/>
+                <TextBlock Grid.Column="1" Text="{Binding CenterFrequencyLabel}" HorizontalAlignment="Center"/>
+                <TextBlock Grid.Column="2" Text="{Binding HighFrequencyLabel}" HorizontalAlignment="Right"/>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>
